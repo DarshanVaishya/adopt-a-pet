@@ -1,10 +1,19 @@
-import React, { useState } from "react";
-import ReactDOM from "react-dom";
+import React, { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 import Pet from "./Pet";
 import "./index.css";
 
 const App = () => {
 	const [pets, setPets] = useState([]);
+
+	useEffect(() => {
+		async function getData() {
+			const res = await fetch("http://localhost:3001/pets");
+			const data = await res.json();
+			setPets(data);
+		}
+		getData();
+	}, []);
 
 	return (
 		<main>
@@ -21,4 +30,5 @@ const App = () => {
 	);
 };
 
-ReactDOM.render(<App />, document.querySelector("#root"));
+const root = createRoot(document.querySelector("#root"));
+root.render(<App />);
