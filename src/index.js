@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+
 import Modal from "react-modal";
 import Pet from "./Pet";
 import "./index.css";
+import NewPetModal from "./NewPetModal";
 
 const App = () => {
 	const [pets, setPets] = useState([]);
@@ -24,6 +26,12 @@ const App = () => {
 		getData();
 	}, []);
 
+	const addPet = async (data) => {
+		data.id = Math.random();
+		setPets(pets.concat(data));
+		setOpen(false);
+	};
+
 	return (
 		<main>
 			<h1>Adopt-a-Pet</h1>
@@ -41,9 +49,9 @@ const App = () => {
 					<button onClick={() => setOpen(true)}>Add a Pet</button>
 				</>
 			)}
-			<Modal isOpen={isOpen} onRequestClose={() => setOpen(false)}>
-				Hello
-			</Modal>
+			{isOpen && (
+				<NewPetModal onSave={addPet} onCancel={() => setOpen(false)} />
+			)}
 		</main>
 	);
 };
