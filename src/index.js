@@ -5,31 +5,46 @@ import Modal from "react-modal";
 import Pet from "./Pet";
 import "./index.css";
 import NewPetModal from "./NewPetModal";
+import { createPet, deletePet, listPets, updatePet } from "./api";
+import EditPetModal from "./EditPetModal";
 
 const App = () => {
 	const [pets, setPets] = useState([]);
 	const [isOpen, setOpen] = useState(false);
+	const [currentPet, setCurrentPet] = useState(null);
 	const [isLoading, setLoading] = useState(false);
 
 	useEffect(() => {
-		async function getData() {
-			try {
-				setLoading(true);
-				const res = await fetch("http://localhost:3001/pets");
-				const data = await res.json();
-				setPets(data);
-				setLoading(false);
-			} catch (e) {
-				setLoading(false);
-			}
-		}
-		getData();
+		setLoading(true);
+		listPets()
+			.then((pets) => setPets(pets))
+			.finally(() => setLoading(false));
 	}, []);
 
-	const addPet = async (data) => {
-		data.id = Math.random();
-		setPets(pets.concat(data));
-		setOpen(false);
+	const addPet = (pet) => {
+		return createPet(pet).then((newPet) => {
+			setPets(pets.concat(newPet));
+			setOpen(false);
+		});
+	};
+
+	const savePet = async (pet) => {
+		return updatePet(pet).then((updatedPet) => {
+			setPets((pets) =>
+				pets.map((pet) => (pet.id !== updatedPet.id ? pet : updatedPet))
+			);
+			setCurrentPet(null);
+		});
+	};
+
+	const removePet = async (byePet) => {
+		const result = window.confirm(
+			`Are you sure you want to adopy ${byePet.name}`
+		);
+		if (result)
+			deletePet(byePet).then(() => {
+				setPets((pets) => pets.filter((pet) => pet.id !== byePet.id));
+			});
 	};
 
 	return (
@@ -42,7 +57,11 @@ const App = () => {
 					<ul>
 						{pets.map((pet) => (
 							<li key={pet.id}>
-								<Pet pet={pet} />
+								<Pet
+									pet={pet}
+									onEdit={() => setCurrentPet(pet)}
+									onRemove={() => removePet(pet)}
+								/>
 							</li>
 						))}
 					</ul>
@@ -51,6 +70,13 @@ const App = () => {
 			)}
 			{isOpen && (
 				<NewPetModal onSave={addPet} onCancel={() => setOpen(false)} />
+			)}
+			{currentPet && (
+				<EditPetModal
+					pet={currentPet}
+					onCancel={() => setCurrentPet(null)}
+					onSave={savePet}
+				/>
 			)}
 		</main>
 	);
